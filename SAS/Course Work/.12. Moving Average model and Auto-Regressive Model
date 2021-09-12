@@ -1,0 +1,36 @@
+FILENAME REFFILE '/home/u54945437/DSCI5340/towel.csv';
+
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=CSV
+	OUT=WORK.IMPORT12;
+	GETNAMES=YES;
+RUN;
+
+Data TowelSales;
+Set IMPORT12;
+Week = _N_;
+
+proc arima data = TowelSales ;
+identify var = y(1) nlag=15 ;
+estimate q=(1) printall method = ML;
+estimate q=(1) printall method = CLS;
+title "Moving Average model order = 1 ML and CLS";
+run;
+
+proc arima data = TowelSales ;
+identify var = y(1) nlag=15 ;
+estimate p=(1) printall method = ML;
+estimate p=(1) printall method = CLS;
+title "Autoregressive model order = 1 ML and CLS";
+run;
+
+Data TowelSales;
+Set TowelSales;
+YLag = Lag(y);
+Z = Y-YLag;
+Zlag = Lag(Z);
+
+proc reg data = TowelSales;
+model Z = Zlag; 
+
+run;
